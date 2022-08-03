@@ -5,6 +5,8 @@
 #include <vector>
 #include "geometry.h"
 
+const Vec3f color = Vec3f(113.0/255, 88.0/255, 226.0/255);
+
 struct Light {
     Light(const Vec3f &p, const float &i) : position(p), intensity(i) {}
     Vec3f position;
@@ -35,6 +37,10 @@ struct Sphere {
 	}
 };
 
+Vec3f reflect(const Vec3f &i, const Vec3f &N) {
+	return i - N * 2.f * (i * N);
+}
+
 bool scene_intersect(const Vec3f &origin, const Vec3f &dir, const Sphere &sphere, Vec3f &hit, Vec3f &N) {
     float sphere_dist = std::numeric_limits<float>::max();
 		float dist_i;
@@ -52,14 +58,16 @@ Vec3f cast_ray(const Vec3f &origin, const Vec3f &dir, const Sphere &sphere, cons
 	Vec3f point, N;
 
 	if (!scene_intersect(origin, dir, sphere, point, N)) {
-		return Vec3f(0.2, 0.2, 0.2); // The background color
+		return Vec3f(0.3, 0.3, 0.3); // The background color
 	}
 
 	float diffuse_light_intensity = 0;
+	float specular_light_intensity = 0;
 	Vec3f light_dir = (light.position - point).normalize();
 	diffuse_light_intensity += light.intensity * std::max(0.f, light_dir * N);
+	// specular_light_intensity += powf(std::max(0.f, reflect(-light_dir, N) * dir), 0.05 * specular_light_intensity) * light.intensity;
 
-	return Vec3f(0.4, 0.4, 0.3) * diffuse_light_intensity;
+	return color * diffuse_light_intensity; //+ Vec3f(1., 1., 1.) * specular_light_intensity;
 }
 
 void render(const Sphere &sphere, const Light &light) {
@@ -91,7 +99,7 @@ void render(const Sphere &sphere, const Light &light) {
 }
 
 int main() {
-	Sphere sphere(Vec3f(-3, 0, -16), 2);
+	Sphere sphere(Vec3f(1, -1, -10), 2);
 	Light light(Vec3f(-20, 20, 20), 1.5);
 
 	render(sphere, light);
