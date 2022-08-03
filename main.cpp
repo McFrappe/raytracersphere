@@ -5,7 +5,11 @@
 #include <vector>
 #include "geometry.h"
 
-const int fov = 90;
+struct Light {
+    Light(const Vec3f &p, const float &i) : position(p), intensity(i) {}
+    Vec3f position;
+    float intensity;
+};
 
 struct Sphere {
 	Vec3f center;
@@ -31,16 +35,34 @@ struct Sphere {
 	}
 };
 
-Vec3f cast_ray(const Vec3f &origin, const Vec3f &dir, const Sphere &sphere) {
-	float sphere_dist = std::numeric_limits<float>::max();
-	if (!sphere.ray_intersect(origin, dir, sphere_dist)) {
-		return Vec3f(0.2, 0.7, 0.8); // The background color
-	}
+bool scene_intersect(const Vec3f &origin, const Vec3f &dir, const Sphere &sphere, Vec3f &hit, Vec3f &N) {
+    float sphere_dist = std::numeric_limits<float>::max();
+		float dist_i;
 
-	return Vec3f(0.4, 0.4, 0.3);
+		if (sphere.ray_intersect(origin, dir, dist_i) && dist_i < sphere_dist) {
+				sphere_dist = dist_i;
+				hit = origin + dir * dist_i;
+				N = (hit - sphere.center).normalize();
+    }
+
+    return sphere_dist < 1000;
 }
 
-void render(const Sphere &sphere) {
+Vec3f cast_ray(const Vec3f &origin, const Vec3f &dir, const Sphere &sphere, const Light &light) {
+	Vec3f point, N;
+
+	if (!scene_intersect(origin, dir, sphere, point, N)) {
+		return Vec3f(0.2, 0.2, 0.2); // The background color
+	}
+
+	float diffuse_light_intensity = 0;
+	Vec3f light_dir = (light.position - point).normalize();
+	diffuse_light_intensity += light.intensity * std::max(0.f, light_dir * N);
+
+	return Vec3f(0.4, 0.4, 0.3) * diffuse_light_intensity;
+}
+
+void render(const Sphere &sphere, const Light &light) {
 	const int width    = 1024;
 	const int height   = 768;
 	const int fov = M_PI/2.;
@@ -52,7 +74,7 @@ void render(const Sphere &sphere) {
 			float x = (2 * (j + 0.5) / (float)width - 1) * tan(fov/2.) * width / (float)height;
 			float y = (2 * (i + 0.5) / (float)height - 1) * tan(fov/2.);
 			Vec3f dir = Vec3f(x, y, -1).normalize();
-			framebuffer[j+i*width] = cast_ray(Vec3f(0, 0, 0), dir, sphere);
+			framebuffer[j+i*width] = cast_ray(Vec3f(0, 0, 0), dir, sphere, light);
 		}
 	}
 
@@ -70,7 +92,9 @@ void render(const Sphere &sphere) {
 
 int main() {
 	Sphere sphere(Vec3f(-3, 0, -16), 2);
-	render(sphere);
+	Light light(Vec3f(-20, 20, 20), 1.5);
+
+	render(sphere, light);
 
 	return 0;
 }
