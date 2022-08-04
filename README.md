@@ -1,1 +1,1 @@
-![](out.ppm)
+![](out.jpg)
