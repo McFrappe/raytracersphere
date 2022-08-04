@@ -1,1 +1,1 @@
-![](/out.jpeg)
+[sphere](out.jpg)
