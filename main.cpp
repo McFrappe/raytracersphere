@@ -88,7 +88,7 @@ void render(const Sphere &sphere, const Light &light) {
 
 	// save the framebuffer to file
 	std::ofstream ofs;
-	ofs.open("./out.ppm");
+	ofs.open("./out.jpg");
 	ofs << "P6\n" << width << " " << height << "\n255\n";
 	for (size_t i = 0; i < height * width; ++i) {
 		for (size_t j = 0; j<3; j++) {
